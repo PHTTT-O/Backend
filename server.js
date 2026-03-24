@@ -17,7 +17,7 @@ const errorHandler = require('./middleware/error');
 ///server.js
 const app = express();
 app.use(cors({
-    origin: 'http://localhost:3000', // ยอมรับจาก Next.js ของเรา
+    origin: 'https://final-project-delta-teal.vercel.app/', // ยอมรับจาก Next.js ของเรา
     credentials: true
 }));
 app.use(express.json());
