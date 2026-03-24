@@ -1,0 +1,36 @@
+@startuml
+title Get All Reservations
+
+participant Client
+participant "Express Server" as Server
+participant "Auth Middleware" as Auth
+participant "Reservation Controller" as Controller
+participant "Reservation Model" as Model
+database MongoDB
+
+Client -> Server : GET /api/v1/reservations
+activate Server
+
+Server -> Auth : protect()
+activate Auth
+Auth --> Server : admin user
+deactivate Auth
+
+Server -> Controller : getAllReservations()
+activate Controller
+
+Controller -> Model : find()
+activate Model
+
+Model -> MongoDB : query reservations
+activate MongoDB
+MongoDB --> Model : reservations
+deactivate MongoDB
+
+Model --> Controller : reservations
+deactivate Model
+
+Controller --> Client : 200 OK + data
+deactivate Controller
+deactivate Server
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+title Update Restaurant (PUT /api/v1/restaurants/{id})
+
+participant "Client" as client
+participant "<<Controller>>\nupdateRestaurant()" as controller
+participant "<<Model>>\nRestaurant" as model
+database "<<MongoDB>>\nrestaurants" as db
+
+client -> controller : PUT /restaurants/{id}
+activate controller
+
+controller -> model : findById(id)
+activate model
+model --> controller : restaurant / null
+deactivate model
+
+alt restaurant not found
+  controller --> client : 404 Restaurant not found
+else restaurant exists
+  controller -> model : findByIdAndUpdate(id, body)
+  activate model
+  model -> db : update document
+  db --> model : updated restaurant
+  deactivate model
+
+  controller --> client : 200 OK + restaurant
+end
+
+deactivate controller
+@enduml

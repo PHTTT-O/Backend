@@ -1,0 +1,21 @@
+@startuml
+title Create Restaurant (POST /api/v1/restaurants)
+
+participant "Client" as client
+participant "<<Controller>>\ncreateRestaurant()" as controller
+participant "<<Model>>\nRestaurant" as model
+database "<<MongoDB>>\nrestaurants" as db
+
+client -> controller : POST /restaurants
+activate controller
+
+controller -> model : create(req.body)
+activate model
+
+model -> db : insert document
+db --> model : restaurant
+deactivate model
+
+controller --> client : 201 Created + restaurant
+deactivate controller
+@enduml

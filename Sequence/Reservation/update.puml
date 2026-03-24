@@ -1,0 +1,46 @@
+@startuml
+title Update Reservation
+
+participant Client
+participant "Express Server" as Server
+participant "Auth Middleware" as Auth
+participant "Reservation Controller" as Controller
+participant "Reservation Model" as Model
+database MongoDB
+
+Client -> Server : PUT /api/v1/reservations/{id}
+activate Server
+
+Server -> Auth : protect()
+activate Auth
+Auth --> Server : req.user
+deactivate Auth
+
+Server -> Controller : updateReservation()
+activate Controller
+
+Controller -> Model : findById(id)
+activate Model
+Model -> MongoDB : query reservation
+activate MongoDB
+MongoDB --> Model : reservation / null
+deactivate MongoDB
+
+alt not found
+  Controller --> Client : 404 Not Found
+else found
+  alt not owner and not admin
+    Controller --> Client : 403 Forbidden
+  else authorized
+    Controller -> Controller : validate table_count ≤ 3
+    Controller -> Model : findByIdAndUpdate()
+    Model -> MongoDB : update reservation
+    MongoDB --> Model : updated reservation
+    Controller --> Client : 200 OK
+  end
+end
+
+deactivate Model
+deactivate Controller
+deactivate Server
+@enduml

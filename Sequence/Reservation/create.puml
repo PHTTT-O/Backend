@@ -1,0 +1,55 @@
+@startuml
+title Create Reservation
+
+participant Client
+participant "Express Server" as Server
+participant "Auth Middleware" as Auth
+participant "Reservation Controller" as Controller
+participant "Restaurant Model" as Restaurant
+participant "Reservation Model" as Reservation
+database MongoDB
+
+Client -> Server : POST /api/v1/reservations
+activate Server
+
+Server -> Auth : protect()
+activate Auth
+Auth --> Server : req.user
+deactivate Auth
+
+Server -> Controller : createReservation()
+activate Controller
+
+Controller -> Restaurant : findById(restaurant_id)
+activate Restaurant
+Restaurant -> MongoDB : query restaurant
+activate MongoDB
+MongoDB --> Restaurant : restaurant / null
+deactivate MongoDB
+deactivate Restaurant
+
+alt restaurant not found
+  Controller --> Client : 404 Restaurant not found
+else restaurant exists
+  Controller -> Reservation : findOne(user, restaurant, date)
+  activate Reservation
+  Reservation -> MongoDB : query reservation
+  activate MongoDB
+  MongoDB --> Reservation : existed / null
+  deactivate MongoDB
+
+  alt duplicated reservation
+    Controller --> Client : 400 Already reserved
+  else valid
+    Controller -> Controller : validate table_count ≤ 3
+    Controller -> Reservation : create()
+    Reservation -> MongoDB : insert reservation
+    MongoDB --> Reservation : reservation
+    Controller --> Client : 201 Created
+  end
+end
+
+deactivate Reservation
+deactivate Controller
+deactivate Server
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+title Get Restaurant By ID (GET /api/v1/restaurants/{id})
+
+participant "Client" as client
+participant "<<Controller>>\ngetRestaurantById()" as controller
+participant "<<Model>>\nRestaurant" as model
+database "<<MongoDB>>\nrestaurants" as db
+
+client -> controller : GET /restaurants/{id}
+activate controller
+
+controller -> model : findById(id)
+activate model
+
+model -> db : query restaurant
+db --> model : restaurant / null
+deactivate model
+
+alt restaurant not found
+  controller --> client : 404 Restaurant not found
+else restaurant found
+  controller --> client : 200 OK + restaurant
+end
+
+deactivate controller
+@enduml

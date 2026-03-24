@@ -1,0 +1,36 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Guest
+actor User
+actor Admin
+
+rectangle "Restaurant Reservation System" {
+
+  ' ===== Auth =====
+  Guest --> (Register)
+  Guest --> (Login)
+
+  User --> (Get My Profile)
+  User --> (Logout)
+
+  ' ===== Restaurant =====
+  User --> (View Restaurants)
+  User --> (View Restaurant Detail)
+
+  Admin --> (Create Restaurant)
+  Admin --> (Update Restaurant)
+  Admin --> (Delete Restaurant)
+
+  ' ===== Reservation =====
+  User --> (Create Reservation)
+  User --> (View My Reservations)
+  User --> (Update Reservation)
+  User --> (Delete Reservation)
+
+  Admin --> (View All Reservations)
+}
+
+Admin --|> User
+@enduml

@@ -1,0 +1,21 @@
+@startuml
+title Get All Restaurants (GET /api/v1/restaurants)
+
+participant "Client" as client
+participant "<<Controller>>\ngetRestaurants()" as controller
+participant "<<Model>>\nRestaurant" as model
+database "<<MongoDB>>\nrestaurants" as db
+
+client -> controller : GET /restaurants
+activate controller
+
+controller -> model : find()
+activate model
+
+model -> db : query all restaurants
+db --> model : restaurants (List)
+deactivate model
+
+controller --> client : 200 OK + restaurants
+deactivate controller
+@enduml

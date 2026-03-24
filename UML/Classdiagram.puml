@@ -1,0 +1,106 @@
+@startuml
+title Class Diagram - Reservation System (All Files)
+
+' =======================
+' User Model
+' =======================
+class User <<model>> {
+  -name : String
+  -email : String
+  -telephone : String
+  -password : String
+  -role : String
+  --
+  +matchPassword(password) : Boolean
+  +getSignedJwtToken() : String
+}
+
+' =======================
+' Restaurant Model
+' =======================
+class Restaurant <<model>> {
+  -name : String
+  -address : String
+  -telephone : String
+  --
+  +create()
+  +find()
+  +findById()
+}
+
+' =======================
+' Reservation Model
+' =======================
+class Reservation <<model>> {
+  -date : Date
+  -table_count : Number
+  -user_id : ObjectId
+  -restaurant_id : ObjectId
+}
+
+' =======================
+' Auth Controller
+' =======================
+class AuthController <<controller>> {
+  +register(req, res)
+  +login(req, res)
+  +getMe(req, res)
+  +logout(req, res)
+}
+
+' =======================
+' Restaurant Controller
+' =======================
+class RestaurantController <<controller>> {
+  +getRestaurants()
+  +getRestaurantById()
+  +createRestaurant()
+  +updateRestaurant()
+  +deleteRestaurant()
+}
+
+' =======================
+' Reservation Controller
+' =======================
+class ReservationController <<controller>> {
+  +createReservation()
+  +getMyReservations()
+  +getAllReservations()
+  +updateReservation()
+  +deleteReservation()
+}
+
+' =======================
+' Auth Middleware
+' =======================
+class AuthMiddleware <<middleware>> {
+  +protect(req, res, next)
+}
+
+' =======================
+' JWT Utility (Conceptual)
+' =======================
+class JWT <<utility>> {
+  +sign(payload) : String
+  +verify(token) : Object
+}
+
+' =======================
+' Relationships
+' =======================
+User "1" -- "many" Reservation : makes >
+Restaurant "1" -- "many" Reservation : has >
+
+AuthController --> User : create / find
+AuthController --> JWT : generate token
+
+AuthMiddleware --> JWT : verify token
+AuthMiddleware --> User : load user
+
+ReservationController --> Reservation
+ReservationController --> Restaurant
+ReservationController --> User
+
+RestaurantController --> Restaurant
+
+@enduml

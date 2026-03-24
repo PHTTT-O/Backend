@@ -1,0 +1,320 @@
+{
+  "info": {
+    "_postman_id": "reservation-full-fixed",
+    "name": "Restaurant Reservation – Full Test (One File, Newman Ready)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+
+  "variable": [
+    { "key": "URL", "value": "http://localhost:5000" },
+
+    { "key": "user_email", "value": "" },
+    { "key": "user_password", "value": "P@ssw0rd123" },
+    { "key": "USER_TOKEN", "value": "" },
+
+    { "key": "admin_email", "value": "admin9999n@gmail.com" },
+    { "key": "admin_password", "value": "admin123456" },
+    { "key": "ADMIN_TOKEN", "value": "" },
+
+    { "key": "restaurantId", "value": "" },
+    { "key": "reservationId", "value": "" },
+
+    { "key": "table_index", "value": 0 },
+    { "key": "table_count", "value": 1 }
+  ],
+
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "if (!pm.collectionVariables.get('user_email')) {",
+          "  const r = Math.floor(Math.random() * 100000);",
+          "  pm.collectionVariables.set('user_email', `user_${r}@test.com`);",
+          "}",
+          "",
+          "const cases = [1,2,3,4];",
+          "let i = Number(pm.collectionVariables.get('table_index')) || 0;",
+          "if (i >= cases.length) i = 0;",
+          "pm.collectionVariables.set('table_count', cases[i]);",
+          "pm.collectionVariables.set('table_index', i + 1);",
+          "",
+          "console.log('USER_EMAIL', pm.collectionVariables.get('user_email'));",
+          "console.log('TABLE_COUNT', pm.collectionVariables.get('table_count'));"
+        ]
+      }
+    }
+  ],
+
+  "item": [
+    {
+      "name": "1-2 User Auth",
+      "item": [
+        {
+          "name": "1. User Registration",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"User\",\n  \"email\": \"{{user_email}}\",\n  \"telephone\": \"0800000000\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{URL}}/auth/register",
+              "host": ["{{URL}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.expect([200,201]).to.include(pm.response.code);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. User Login",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{URL}}/auth/login",
+              "host": ["{{URL}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.response.to.have.status(200);",
+                  "pm.collectionVariables.set('USER_TOKEN', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "3 Restaurant",
+      "item": [
+        {
+          "name": "3. User View Product",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{URL}}/restaurant",
+              "host": ["{{URL}}"],
+              "path": ["restaurant"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.response.to.have.status(200);"] }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "4-7 User Reservation",
+      "item": [
+        {
+          "name": "4. User Create Booking + Condition",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurant_id\": \"{{restaurantId}}\",\n  \"date\": \"2026-04-01\",\n  \"table_count\": {{table_count}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{URL}}/reservation",
+              "host": ["{{URL}}"],
+              "path": ["reservation"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const count = Number(pm.collectionVariables.get('table_count'));",
+                  "if (count > 3) {",
+                  "  pm.expect([400]).to.include(pm.response.code);",
+                  "} else {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.collectionVariables.set('reservationId', pm.response.json().data._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. User View Own Booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{URL}}/reservation",
+              "host": ["{{URL}}"],
+              "path": ["reservation"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.response.to.have.status(200);"] }
+            }
+          ]
+        },
+        {
+          "name": "6. User Edit Own Booking",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"table_count\": 2 }",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{URL}}/reservation/{{reservationId}}",
+              "host": ["{{URL}}"],
+              "path": ["reservation", "{{reservationId}}"]
+            }
+          }
+        },
+        {
+          "name": "7. User Delete Own Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{URL}}/reservation/{{reservationId}}",
+              "host": ["{{URL}}"],
+              "path": ["reservation", "{{reservationId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "8-12 Admin",
+      "item": [
+        {
+          "name": "8. User Logout",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{USER_TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{URL}}/auth/logout",
+              "host": ["{{URL}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "9. Admin Login",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{URL}}/auth/login",
+              "host": ["{{URL}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.response.to.have.status(200);",
+                  "pm.collectionVariables.set('ADMIN_TOKEN', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Admin View Any Booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{URL}}/reservation/all",
+              "host": ["{{URL}}"],
+              "path": ["reservation", "all"]
+            }
+          }
+        },
+        {
+          "name": "11. Admin Edit Any Booking",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"table_count\": 1 }",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{URL}}/reservation/{{reservationId}}",
+              "host": ["{{URL}}"],
+              "path": ["reservation", "{{reservationId}}"]
+            }
+          }
+        },
+        {
+          "name": "12. Admin Delete Any Booking",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{URL}}/reservation/{{reservationId}}",
+              "host": ["{{URL}}"],
+              "path": ["reservation", "{{reservationId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

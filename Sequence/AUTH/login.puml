@@ -1,0 +1,38 @@
+@startuml
+title Login User
+
+participant "Client" as client
+participant "Express Server" as server
+participant "Auth Controller" as controller
+participant "User Model" as model
+database "MongoDB" as db
+
+client -> server : POST /api/v1/auth/login
+activate server
+
+server -> controller : login(req, res)
+activate controller
+
+controller -> model : findOne(email)
+activate model
+
+model -> db : query user
+activate db
+db --> model : user + password
+deactivate db
+
+model --> controller : user
+deactivate model
+
+controller -> controller : matchPassword()
+alt password valid
+  controller -> controller : generate JWT
+  controller --> client : 200 OK + token
+else invalid
+  controller --> client : 401 Unauthorized
+end
+
+deactivate controller
+deactivate server
+
+@enduml

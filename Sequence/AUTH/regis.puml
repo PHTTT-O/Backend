@@ -1,0 +1,32 @@
+@startuml
+title Register User
+
+participant "Client" as client
+participant "Express Server" as server
+participant "Auth Controller" as controller
+participant "User Model" as model
+database "MongoDB" as db
+
+client -> server : POST /api/v1/auth/register
+activate server
+
+server -> controller : register(req, res)
+activate controller
+
+controller -> model : User.create(userData)
+activate model
+
+model -> db : insert user
+activate db
+db --> model : user document
+deactivate db
+
+model --> controller : user
+deactivate model
+
+controller -> controller : generate JWT
+controller --> client : 200 OK + token
+deactivate controller
+deactivate server
+
+@enduml
