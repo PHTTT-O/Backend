@@ -17,7 +17,7 @@ const errorHandler = require('./middleware/error');
 ///server.js
 const app = express();
 app.use(cors({
-    origin: 'https://final-project-delta-teal.vercel.app/', // ยอมรับจาก Next.js ของเรา
+    origin: true, // ยอมรับจาก Next.js ของเรา
     credentials: true
 }));
 app.use(express.json());
